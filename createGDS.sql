@@ -12,7 +12,7 @@ CREATE TABLE "numeric_matrix" (
 
 CREATE TABLE "numeric_matrix_row" (
     id integer NOT NULL PRIMARY KEY,
-    matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id"),
+    matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE,
     ind integer NOT NULL,
     "name" varchar(50) NOT NULL,
     "desc" varchar(200)
@@ -20,7 +20,7 @@ CREATE TABLE "numeric_matrix_row" (
 
 CREATE TABLE "numeric_matrix_column" (
     id integer NOT NULL PRIMARY KEY,
-    matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id"),
+    matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE,
     ind integer  NOT NULL,
     "name" varchar(50) NOT NULL,
     "desc" varchar(200)
@@ -28,15 +28,15 @@ CREATE TABLE "numeric_matrix_column" (
 
 CREATE TABLE "numeric_matrix_data" (
     id integer NOT NULL PRIMARY KEY,
-    matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id"),
-    row_id integer  NOT NULL REFERENCES "numeric_matrix_row" ("id"),
-    col_id integer  NOT NULL REFERENCES "numeric_matrix_column" ("id"),
+    matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE,
+    row_id integer  NOT NULL REFERENCES "numeric_matrix_row" ("id") ON DELETE CASCADE,
+    col_id integer  NOT NULL REFERENCES "numeric_matrix_column" ("id") ON DELETE CASCADE,
     value numeric
 );
 
 CREATE TABLE numeric_matrix_pca (
     id integer NOT NULL PRIMARY KEY,
-    matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id"),
+    matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE,
     pca_dimension integer NOT NULL,
     exp_var numeric NOT NULL,
     exp_var_perc numeric NOT NULL,
@@ -46,14 +46,13 @@ CREATE TABLE numeric_matrix_pca (
 
 -- column-wise PCA
 CREATE TABLE numeric_matrix_pca_score (
-   numeric_matrix_data_id integer NOT NULL REFERENCES "numeric_matrix_data" ("id"),
-   numeric_matrix_column_id integer NOT NULL REFERENCES "numeric_matrix_column" ("id"),
-   pca_id integer NOT NULL REFERENCES "numeric_matrix_pca" ("id")
+   numeric_matrix_data_id integer NOT NULL REFERENCES "numeric_matrix_data" ("id") ON DELETE CASCADE,
+   numeric_matrix_column_id integer NOT NULL REFERENCES "numeric_matrix_column" ("id") ON DELETE CASCADE,
+   pca_id integer NOT NULL REFERENCES "numeric_matrix_pca" ("id") ON DELETE CASCADE
 );
 
-
 CREATE TABLE "gds_matrix" (
-  matrix_id integer NOT NULL PRIMARY KEY REFERENCES "numeric_matrix" ("id"),
+  matrix_id integer NOT NULL PRIMARY KEY REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE,
   gdsID varchar(50) NOT NULL UNIQUE,
   gpl varchar(50) NOT NULL
 );
@@ -61,19 +60,26 @@ CREATE TABLE "gds_matrix" (
 -- data structure for design and contrast matrix
 
 CREATE TABLE design_matrix (
-    id integer NOT NULL PRIMARY KEY REFERENCES "numeric_matrix" ("id"),
-    exprs_matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id")
+    id integer NOT NULL PRIMARY KEY REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE,
+    exprs_matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE
 );
 
 CREATE TABLE contrast_matrix (
-    id integer NOT NULL PRIMARY KEY REFERENCES "numeric_matrix" ("id"),
-    design_matrix_id integer NOT NULL REFERENCES "design_matrix" ("id")
+    id integer NOT NULL PRIMARY KEY REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE,
+    design_matrix_id integer NOT NULL REFERENCES "design_matrix" ("id") ON DELETE CASCADE
+);
+
+CREATE TABLE limma_deg_set (
+    id integer NOT NULL PRIMARY KEY,
+    matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE,
+    design_matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE,
+    contrast_matrix_id integer NOT NULL REFERENCES "numeric_matrix" ("id") ON DELETE CASCADE
 );
 
 CREATE TABLE limma_deg (
     id integer NOT NULL PRIMARY KEY,
-    contrast_col_id integer NOT NULL REFERENCES "numeric_matrix_column" ("id"),
-    exprs_row_id integer NOT NULL REFERENCES "numeric_matrix_row" ("id"),
+    contrast_col_id integer NOT NULL REFERENCES "numeric_matrix_column" ("id") ON DELETE CASCADE,
+    exprs_row_id integer NOT NULL REFERENCES "numeric_matrix_row" ("id") ON DELETE CASCADE,
     logFC numeric,
     AveExpr numeric,
     t numeric,
@@ -81,6 +87,9 @@ CREATE TABLE limma_deg (
     adjP numeric,
     B numeric
 );
+
+
+
 
 CREATE INDEX "numeric_matrix_row_mind" ON "numeric_matrix_row" (matrix_id);
 CREATE INDEX "numeric_matrix_row_nind" ON "numeric_matrix_row" (name);
