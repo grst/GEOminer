@@ -8,6 +8,8 @@ args = commandArgs(trailingOnly = TRUE)
 geo_id = args[1]
 outdir = args[2]
 outfile = paste(outdir, "/", geo_id, ".Rdata", sep="")
+print(paste("GEO ID: ", geo_id))
+print(paste("OUTFILE: ", outfile))
 
 gds = getGEO(geo_id)
 eset = GDS2eSet(gds)
