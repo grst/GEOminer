@@ -1,7 +1,14 @@
 #!Rscript
 
-###
-# USAGE geo_to_eset.Rscript GDS507 /path/to/outdir
+#########
+# USAGE Rscript geo_to_eset.Rscript <GDS507> </path/to/outdir>
+# 
+# Download a GEO Dataset (GDS) from GEO by Accession Number, 
+# convert it to a biobase ExpressionSet and save it to
+# an R object. The variable storing the ExpressionSet will
+# be named 'eset'
+#########
+
 library(GEOquery)
 
 args = commandArgs(trailingOnly = TRUE)
