@@ -18,4 +18,4 @@ Use xargs to download multiple studies:
 xargs -I '{}' "Rscript geo_to_eset.R {} <output_dir>" < list_of_geo_ids
 ```
 
-Alternaively, use e.g. [chunksub](https://github.com/grst/chunksub) to run the download on a High-Performance Cluster (HPC)
+Alternatively, use e.g. [chunksub](https://github.com/grst/chunksub) to run the download on a High-Performance Cluster (HPC)
