@@ -1,3 +1,5 @@
+#!/bin/env Rscript
+
 library(Biobase) 
 library(tools)
 
