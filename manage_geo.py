@@ -1,15 +1,9 @@
 #!/bin/env python3
 
-from docopt import docopt
-import os
-from config import config
-import shutil
-import re
-import sys
-
 """Manage the local GEO installation.
 
 Usage:
+  manage_geo --help
   manage_geo put FILE GSE GPL SUFFIX [--force] [--move]
   manage_geo get ID [SUFFIX]
   manage_geo get_list LIST_OF_ID [SUFFIX]
@@ -31,6 +25,15 @@ Arguments:
   --move            move file to destination, default is copy.
 
 """
+
+
+from docopt import docopt
+import os
+from config import config
+import shutil
+import re
+import sys
+
 
 RE_GSE = re.compile(r'GSE\d+')
 RE_GPL = re.compile(r'GPL\d+')
@@ -153,10 +156,10 @@ def get(arguments):
 
 
 def get_list(arguments):
-    id = arguments["ID"]
     suffix = arguments["suffix"]
     with open(arguments['LIST_OF_ID']) as f:
-        id_list = f.readlines()
+        # strip comments from id file.
+        id_list = [l for l in f.readlines() if not l.startswith('#')]
     series_dir = os.path.join(config['root_dir'], 'series')
     file_list = []
     for root, dirs, files in os.walk(series_dir):
