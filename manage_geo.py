@@ -20,7 +20,7 @@ Arguments:
   ID                either a GSE or GPL identifier
   SUFFIX            the file type, e.g. 'rdata', 'exprs', 'pdata', 'fdata'. It is part
                     of the filename, e.g. GSE12345-GPL1250_exprs.gct
-  LIST_OF_ID        a list of ID's as a file, one ID per line.
+  LIST_OF_ID        a list of ID's as a file, one ID per line. This can be either GSE???? or GPL???? or GSE???-GPL???.
   --force           overwrite file if it already exists.
   --move            move file to destination, default is copy.
 
@@ -79,9 +79,13 @@ def get_filename(gse, gpl, suffix, extension):
 
     >>> get_filename('GSE12345', 'GPL1250', 'rdata', 'Rdata')
     'GSE12345-GPL1250_rdata.Rdata'
+    >>> get_filename('GSE12345', 'GPL1250', 'rdata', '.Rdata')
+    'GSE12345-GPL1250_rdata.Rdata'
     """
     assert gse[:3] == 'GSE', 'invalid GSE'
     assert gpl[:3] == 'GPL', 'invalid GPL'
+    if extension.startswith('.'):
+        extension = extension[1:]
     return "{}-{}_{}.{}".format(gse, gpl, suffix, extension)
 
 
@@ -119,70 +123,71 @@ def put(arguments):
     dest_file = os.path.join(series_path, dest_filename)
 
     assert os.path.isfile(in_file), "Input file is not a file. "
-    if os.path.exists(dest_file and not arguments['--force']):
+    assert extension, "Invalid extension. "
+    if os.path.exists(dest_file) and not arguments['--force']:
         raise FileExistsError('The destination file already exists and --force is not set: {}'.format(dest_file))
 
     os.makedirs(series_path, exist_ok=True)
     if arguments['--move']:
+        sys.stderr.write('Move {} to {}'.format(in_file, dest_file))
         shutil.move(in_file, dest_file)
+        sys.stderr.write('    .. DONE\n')
     else:
+        sys.stderr.write('Copy {} to {}'.format(in_file, dest_file))
         shutil.copyfile(in_file, dest_file)
+        sys.stderr.write('    .. DONE\n')
 
 
 def has_suffix(file, suffix):
-    return not suffix or os.path.splitext(file)[0].endswith('_' + suffix)
+    return suffix is None or os.path.splitext(file)[0].endswith('_' + suffix)
 
 
 def get(arguments):
     series_dir = os.path.join(config['root_dir'], 'series')
     id = arguments['ID']
-    suffix = arguments['suffix']
-    file_list = []
+    suffix = arguments['SUFFIX']
     if id.startswith('GSE'):
         series_path = os.path.join(config['root_dir'], get_series_path(id))
-        with os.scandir(series_path) as it:
-            for entry in it:
-                if entry.is_file() and has_suffix(entry.name, suffix):
-                    file_list.append(entry.path)
+        for file in os.listdir(series_path):
+            if os.path.isfile(os.path.join(series_path, file)) and has_suffix(file, suffix):
+                sys.stdout.write(os.path.join(series_path, file) + '\n')
+
     elif id.startswith('GPL'):
         for root, dirs, files in os.walk(series_dir):
             for file in files:
                 gse, gpl = get_ids_from_filename(file)
                 if gpl == id and has_suffix(file, suffix):
-                    file_list.append(os.path.join(root, file))
+                    sys.stdout.write(os.path.join(root, file) + '\n')
     else:
         raise Exception("Identifier not supported. ")
-    return file_list
 
 
 def get_list(arguments):
-    suffix = arguments["suffix"]
+    suffix = arguments["SUFFIX"]
     with open(arguments['LIST_OF_ID']) as f:
         # strip comments from id file.
-        id_list = [l for l in f.readlines() if not l.startswith('#')]
+        id_list = [l.strip() for l in f.readlines() if not l.startswith('#')]
     series_dir = os.path.join(config['root_dir'], 'series')
-    file_list = []
     for root, dirs, files in os.walk(series_dir):
         for file in files:
             gse, gpl = get_ids_from_filename(file)
-            if (gse in id_list or gpl in id_list) and has_suffix(file, suffix):
-                file_list.append(os.path.join(root, file))
-    return file_list
+            if (gse in id_list or gpl in id_list or '{}-{}'.format(gse, gpl) in id_list) and has_suffix(file, suffix):
+                sys.stdout.write(os.path.join(root, file) + '\n')
 
 
 def main():
     arguments = docopt(__doc__, version='manage_geo 0.1.0')
 
+    # print(arguments)
+
     if arguments['put']:
         put(arguments)
 
     elif arguments['get']:
-        for l in get(arguments):
-            sys.stdout.write(l + '\n')
+        get(arguments)
 
     elif arguments['get_list']:
-        for l in get_list(arguments):
-            sys.stdout.write(l + '\n')
+        get_list(arguments)
 
 
 if __name__ == '__main__':
