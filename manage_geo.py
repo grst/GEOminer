@@ -38,6 +38,7 @@ import sys
 RE_GSE = re.compile(r'GSE\d+')
 RE_GPL = re.compile(r'GPL\d+')
 
+
 def get_series_path(gse):
     """
     Return a path to a series which mimicks the directory structure on the `GEO ftp server`_.
@@ -58,8 +59,11 @@ def get_series_path(gse):
     'series/GSE2nnn/GSE2345'
     >>> get_series_path('GSE12345')
     'series/GSE12nnn/GSE12345'
+    >>> get_series_path('GSE12345-GPL1261')
+    'series/GSE12nnn/GSE12345'
     """
     assert gse[:3] == 'GSE', "invalid GSE identifier"
+    gse = gse.split('-')[0] if '-' in gse else gse
     gse_nnn = gse[3:]
     gse_nnn = 'GSE' + gse_nnn[-5:-3] + 'nnn'
     return os.path.join("series", gse_nnn, gse)
